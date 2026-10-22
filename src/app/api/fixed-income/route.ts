@@ -49,18 +49,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // If portfolio has only 1 or 0 fixed income positions, supplement with realistic Brazilian fixed income custody for rich demonstration
-    const fixedIncomeCount = fgcPositions.filter((p) => p.assetType === 'fixed_income').length;
-    if (fixedIncomeCount <= 1) {
-      fgcPositions.push(
-        { issuer: 'Banco Inter S.A.', assetType: 'fixed_income', category: 'cdb', amountCents: 12000000 }, // R$ 120.000 (CDB 115% CDI)
-        { issuer: 'Itaú Unibanco S.A.', assetType: 'fixed_income', category: 'lca', amountCents: 8500000 }, // R$ 85.000 (LCA 94% CDI)
-        { issuer: 'Banco do Brasil S.A.', assetType: 'fixed_income', category: 'lci', amountCents: 6000000 }, // R$ 60.000 (LCI 92% CDI)
-        { issuer: 'Tesouro Nacional', assetType: 'fixed_income', category: 'tesouro_direto', amountCents: 14500000 }, // R$ 145.000 (Tesouro IPCA+ 2035)
-        { issuer: 'Vale S.A. Infraestrutura', assetType: 'fixed_income', category: 'debenture', amountCents: 4000000 } // R$ 40.000 (Debênture Incentivada)
-      );
-    }
-
+    // Only analyze real user fixed income positions in custody; do not inject fake assets
     const fgcAnalysis = FixedIncomeService.calculateFgcCoverage(fgcPositions);
     const tesouroSecurities = FixedIncomeService.getTesouroSecurities();
     const privateCreditShowcase = FixedIncomeService.getPrivateCreditShowcase();

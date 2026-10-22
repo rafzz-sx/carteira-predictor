@@ -27,9 +27,9 @@ import { UserProfile, InvestorRiskProfile } from '@/domain/models/user-profile';
 import { PROFILE_ALLOCATIONS, PROFILE_METADATA } from '@/domain/finance/risk-questionnaire';
 
 export default function ProfilePage() {
-  const { privacyMode } = useUI();
+  const { privacyMode, userId } = useUI();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [actionPlanBase, setActionPlanBase] = useState<number>(250000);
+  const [actionPlanBase, setActionPlanBase] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -45,18 +45,18 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetch('/api/user/profile');
+        const res = await fetch(`/api/user/profile?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
         if (data.profile) {
           setProfile(data.profile);
-          setIncomeStr(data.profile.monthlyNetIncomeCents ? (data.profile.monthlyNetIncomeCents / 100).toString() : '12000');
-          setExpensesStr(data.profile.monthlyExpensesCents ? (data.profile.monthlyExpensesCents / 100).toString() : '6000');
+          setIncomeStr(data.profile.monthlyNetIncomeCents ? (data.profile.monthlyNetIncomeCents / 100).toString() : '0');
+          setExpensesStr(data.profile.monthlyExpensesCents ? (data.profile.monthlyExpensesCents / 100).toString() : '0');
           setHorizonYears(data.profile.horizonYears || 10);
           setEmergencyMonths(data.profile.emergencyFundMonths || 6);
         }
 
         // Fetch action plan
-        const planRes = await fetch('/api/action-plan');
+        const planRes = await fetch(`/api/action-plan?userId=${encodeURIComponent(userId)}`);
         const planData = await planRes.json();
         if (planData.entries && planData.entries.length > 0) {
           setActionPlanBase(planData.entries[0].baseAmountCents);
@@ -68,7 +68,7 @@ export default function ProfilePage() {
       }
     }
     loadData();
-  }, []);
+  }, [userId]);
 
   const handleSaveFinances = async () => {
     if (!profile) return;
@@ -82,6 +82,7 @@ export default function ProfilePage() {
 
       const updatedProfile: UserProfile = {
         ...profile,
+        id: userId,
         monthlyExpensesCents: expensesCents,
         monthlyNetIncomeCents: incomeCents,
         horizonYears,
@@ -116,6 +117,7 @@ export default function ProfilePage() {
     try {
       const updatedProfile: UserProfile = {
         ...profile,
+        id: userId,
         riskProfile: newProfile,
         updatedAt: new Date().toISOString(),
       };

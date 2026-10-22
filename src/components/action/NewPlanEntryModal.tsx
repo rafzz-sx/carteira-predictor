@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AnnualAdjustmentType } from '@/domain/models/action-plan';
 import { formatCurrency, parseCurrencyToCents } from '@/lib/formatters';
+import { useUI } from '@/lib/theme-context';
 
 interface NewPlanEntryModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface NewPlanEntryModalProps {
 }
 
 export function NewPlanEntryModal({ isOpen, onClose, onSuccess }: NewPlanEntryModalProps) {
+  const { userId } = useUI();
   const [effectiveFrom, setEffectiveFrom] = useState<string>('2026-11');
   const [amountStr, setAmountStr] = useState<string>('3000');
   const [adjustmentType, setAdjustmentType] = useState<AnnualAdjustmentType>('ipca');
@@ -51,6 +53,7 @@ export function NewPlanEntryModal({ isOpen, onClose, onSuccess }: NewPlanEntryMo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           effectiveFrom,
           baseAmountCents: amountCents,
           annualAdjustmentType: adjustmentType,

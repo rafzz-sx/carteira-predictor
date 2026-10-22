@@ -10,46 +10,13 @@ import {
 
 const DEFAULT_USER_ID = 'demo-user-1';
 
-// Seed initial plan entry if repository has none
-const INITIAL_PLAN_ENTRY: ActionPlanEntry = {
-  id: 'plan_seed_demo_1',
-  userId: DEFAULT_USER_ID,
-  effectiveFrom: '2026-07',
-  baseAmountCents: 250000, // R$ 2.500,00
-  annualAdjustmentType: 'ipca',
-  notes: 'Plano de Ação regular inicial configurado para compras mensais na B3.',
-  createdAt: '2026-07-01T10:00:00.000Z',
-};
-
-const INITIAL_OVERRIDES: ActionMonthOverride[] = [
-  {
-    id: 'ov_seed_13th',
-    userId: DEFAULT_USER_ID,
-    yearMonth: '2026-12',
-    overrideAmountCents: 500000, // R$ 5.000,00
-    isOneOffDeposit: true,
-    description: '13º Salário (Ação Extraordinária)',
-  },
-];
-
 export async function GET(request: NextRequest) {
   try {
     const userId = request.nextUrl.searchParams.get('userId') || DEFAULT_USER_ID;
     const actionRepo = RepositoryFactory.getActionPlanRepository();
 
-    let entries = await actionRepo.listPlanEntries(userId);
-    let overrides = await actionRepo.listOverrides(userId);
-
-    // Seed defaults if empty
-    if (entries.length === 0) {
-      await actionRepo.savePlanEntry(INITIAL_PLAN_ENTRY);
-      entries = [INITIAL_PLAN_ENTRY];
-
-      for (const ov of INITIAL_OVERRIDES) {
-        await actionRepo.saveOverride(ov);
-      }
-      overrides = INITIAL_OVERRIDES;
-    }
+    const entries = await actionRepo.listPlanEntries(userId);
+    const overrides = await actionRepo.listOverrides(userId);
 
     const currentYearMonth = '2026-10'; // October 2026 current anchor
     const activePlan = resolveMonthlyActionPlan(currentYearMonth, entries, overrides);

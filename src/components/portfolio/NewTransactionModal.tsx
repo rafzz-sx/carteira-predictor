@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/Input';
 import { BrazilianAssetGuard } from '@/domain/guards/brazilian-asset-guard';
 import { TransactionType } from '@/domain/models/transaction';
 import { formatCurrency, parseCurrencyToCents } from '@/lib/formatters';
+import { useUI } from '@/lib/theme-context';
 
 interface NewTransactionModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export function NewTransactionModal({
   onSuccess,
   initialTicker = '',
 }: NewTransactionModalProps) {
+  const { userId } = useUI();
   const [type, setType] = useState<TransactionType>('buy');
   const [ticker, setTicker] = useState<string>(initialTicker);
   const [tradeDate, setTradeDate] = useState<string>('2026-10-21');
@@ -76,6 +78,8 @@ export function NewTransactionModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
+          portfolioId: `port_${userId}`,
           ticker: cleanTicker,
           type,
           tradeDate,

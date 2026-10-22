@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { formatCurrency, parseCurrencyToCents } from '@/lib/formatters';
+import { useUI } from '@/lib/theme-context';
 
 interface NewMonthOverrideModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface NewMonthOverrideModalProps {
 }
 
 export function NewMonthOverrideModal({ isOpen, onClose, onSuccess }: NewMonthOverrideModalProps) {
+  const { userId } = useUI();
   const [yearMonth, setYearMonth] = useState<string>('2026-12');
   const [amountStr, setAmountStr] = useState<string>('5000');
   const [description, setDescription] = useState<string>('13º Salário');
@@ -49,6 +51,7 @@ export function NewMonthOverrideModal({ isOpen, onClose, onSuccess }: NewMonthOv
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           type: 'override',
           yearMonth,
           overrideAmountCents: amountCents,

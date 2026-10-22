@@ -38,7 +38,7 @@ interface PortfolioSummary {
 }
 
 export default function CarteiraPage() {
-  const { privacyMode } = useUI();
+  const { privacyMode, userId } = useUI();
   const [positions, setPositions] = useState<EnrichedPosition[]>([]);
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -56,7 +56,7 @@ export default function CarteiraPage() {
     let isCancelled = false;
     async function loadPortfolio() {
       try {
-        const res = await fetch('/api/portfolio');
+        const res = await fetch(`/api/portfolio?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
         if (!isCancelled && data.positions) {
           setPositions(data.positions);
@@ -74,7 +74,7 @@ export default function CarteiraPage() {
     return () => {
       isCancelled = true;
     };
-  }, [refreshTrigger]);
+  }, [refreshTrigger, userId]);
 
   // Filtered positions
   const filteredPositions = useMemo(() => {

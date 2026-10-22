@@ -24,10 +24,14 @@ interface UIContextType {
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
 
-const DEFAULT_WORKSPACES: UserWorkspace[] = [
-  { id: 'demo-user-1', name: 'Carteira Principal' },
-  { id: 'user-convidado', name: 'Carteira Convidado' },
-];
+function generateUniqueUserId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return 'user_' + crypto.randomUUID().replace(/-/g, '').substring(0, 12);
+  }
+  const rand = Math.random().toString(36).substring(2, 8);
+  const time = Date.now().toString(36).substring(4);
+  return `user_${rand}${time}`;
+}
 
 export function UIProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
@@ -54,12 +58,23 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const urlUser = urlParams.get('user') || urlParams.get('userId');
+      if (urlUser && urlUser.trim()) {
+        const clean = urlUser.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        localStorage.setItem('cp_user_id', clean);
+        return clean;
+      }
+
       const savedUser = localStorage.getItem('cp_user_id');
-      const resolved = urlUser || savedUser || 'demo-user-1';
-      localStorage.setItem('cp_user_id', resolved);
-      return resolved;
+      if (savedUser && savedUser !== 'demo-user-1') {
+        return savedUser;
+      }
+
+      // Generate a brand new unique private workspace ID for this device
+      const freshId = generateUniqueUserId();
+      localStorage.setItem('cp_user_id', freshId);
+      return freshId;
     }
-    return 'demo-user-1';
+    return 'user_default';
   });
 
   const [workspaces, setWorkspaces] = useState<UserWorkspace[]>(() => {
@@ -68,7 +83,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed) && parsed.length > 0 && !parsed.some((w) => w.id === 'demo-user-1')) {
             return parsed;
           }
         } catch {
@@ -76,7 +91,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
         }
       }
     }
-    return DEFAULT_WORKSPACES;
+    return [{ id: userId, name: 'Carteira Principal' }];
   });
 
   const setTheme = (newTheme: Theme) => {
@@ -98,7 +113,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setUserId = (newUserId: string) => {
-    const clean = newUserId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'demo-user-1';
+    const clean = newUserId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') || generateUniqueUserId();
     setUserIdState(clean);
     if (typeof window !== 'undefined') {
       localStorage.setItem('cp_user_id', clean);
@@ -107,8 +122,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addWorkspace = (id: string, name: string) => {
-    const cleanId = id.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-    if (!cleanId) return;
+    const cleanId = id.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') || generateUniqueUserId();
     const updated = [...workspaces.filter((w) => w.id !== cleanId), { id: cleanId, name }];
     setWorkspaces(updated);
     if (typeof window !== 'undefined') {
@@ -118,17 +132,16 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    document.documentElement.classList.remove('theme-dark', 'theme-oled', 'theme-light', 'dark');
-    document.documentElement.classList.add(`theme-${theme}`);
-    if (theme === 'dark' || theme === 'oled') {
-      document.documentElement.classList.add('dark');
-    }
-    if (privacyMode) {
-      document.body.classList.add('privacy-active');
+    // Sync class on body / html for CSS tokens
+    const root = document.documentElement;
+    root.classList.remove('theme-dark', 'theme-oled', 'theme-light');
+    root.classList.add(`theme-${theme}`);
+    if (theme === 'light') {
+      root.classList.remove('dark');
     } else {
-      document.body.classList.remove('privacy-active');
+      root.classList.add('dark');
     }
-  }, [theme, privacyMode]);
+  }, [theme]);
 
   return (
     <UIContext.Provider

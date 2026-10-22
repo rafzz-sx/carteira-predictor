@@ -1,6 +1,6 @@
 // src/lib/repositories/repository-factory.ts
 // Factory pattern for persistence abstraction.
-// Allows swapping between Turso (Primary), Firestore (Fallback), and Mock in < 1 hour.
+// Allows swapping between Supabase (Primary), Turso (Alternative), and Mock.
 
 import {
   IUserRepository,
@@ -20,6 +20,12 @@ import {
   TursoTransactionRepository,
   TursoActionPlanRepository,
 } from './turso-repository';
+import {
+  SupabaseUserRepository,
+  SupabasePortfolioRepository,
+  SupabaseTransactionRepository,
+  SupabaseActionPlanRepository,
+} from './supabase-repository';
 
 export class RepositoryFactory {
   private static userRepoInstance: IUserRepository | null = null;
@@ -27,23 +33,40 @@ export class RepositoryFactory {
   private static transactionRepoInstance: ITransactionRepository | null = null;
   private static actionPlanRepoInstance: IActionPlanRepository | null = null;
 
-  private static getProvider(): 'turso' | 'firestore' | 'mock' {
+  private static getProvider(): 'supabase' | 'turso' | 'mock' {
     const provider = process.env.PERSISTENCE_PROVIDER?.toLowerCase();
-    if (provider === 'turso' && process.env.TURSO_DATABASE_URL) {
+
+    // 1. Supabase check
+    if (
+      provider === 'supabase' ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.SUPABASE_URL
+    ) {
+      return 'supabase';
+    }
+
+    // 2. Turso check
+    if (
+      provider === 'turso' ||
+      process.env.TURSO_DATABASE_URL
+    ) {
       return 'turso';
     }
-    // If Turso URL is explicitly configured, default to Turso
-    if (process.env.TURSO_DATABASE_URL) {
-      return 'turso';
-    }
+
+    // 3. Fallback to In-Memory Mock
     return 'mock';
   }
 
   static getUserRepository(): IUserRepository {
     if (!this.userRepoInstance) {
       const provider = this.getProvider();
-      this.userRepoInstance =
-        provider === 'turso' ? new TursoUserRepository() : new MockUserRepository();
+      if (provider === 'supabase') {
+        this.userRepoInstance = new SupabaseUserRepository();
+      } else if (provider === 'turso') {
+        this.userRepoInstance = new TursoUserRepository();
+      } else {
+        this.userRepoInstance = new MockUserRepository();
+      }
     }
     return this.userRepoInstance;
   }
@@ -51,8 +74,13 @@ export class RepositoryFactory {
   static getPortfolioRepository(): IPortfolioRepository {
     if (!this.portfolioRepoInstance) {
       const provider = this.getProvider();
-      this.portfolioRepoInstance =
-        provider === 'turso' ? new TursoPortfolioRepository() : new MockPortfolioRepository();
+      if (provider === 'supabase') {
+        this.portfolioRepoInstance = new SupabasePortfolioRepository();
+      } else if (provider === 'turso') {
+        this.portfolioRepoInstance = new TursoPortfolioRepository();
+      } else {
+        this.portfolioRepoInstance = new MockPortfolioRepository();
+      }
     }
     return this.portfolioRepoInstance;
   }
@@ -60,8 +88,13 @@ export class RepositoryFactory {
   static getTransactionRepository(): ITransactionRepository {
     if (!this.transactionRepoInstance) {
       const provider = this.getProvider();
-      this.transactionRepoInstance =
-        provider === 'turso' ? new TursoTransactionRepository() : new MockTransactionRepository();
+      if (provider === 'supabase') {
+        this.transactionRepoInstance = new SupabaseTransactionRepository();
+      } else if (provider === 'turso') {
+        this.transactionRepoInstance = new TursoTransactionRepository();
+      } else {
+        this.transactionRepoInstance = new MockTransactionRepository();
+      }
     }
     return this.transactionRepoInstance;
   }
@@ -69,8 +102,13 @@ export class RepositoryFactory {
   static getActionPlanRepository(): IActionPlanRepository {
     if (!this.actionPlanRepoInstance) {
       const provider = this.getProvider();
-      this.actionPlanRepoInstance =
-        provider === 'turso' ? new TursoActionPlanRepository() : new MockActionPlanRepository();
+      if (provider === 'supabase') {
+        this.actionPlanRepoInstance = new SupabaseActionPlanRepository();
+      } else if (provider === 'turso') {
+        this.actionPlanRepoInstance = new TursoActionPlanRepository();
+      } else {
+        this.actionPlanRepoInstance = new MockActionPlanRepository();
+      }
     }
     return this.actionPlanRepoInstance;
   }

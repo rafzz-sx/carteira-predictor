@@ -53,16 +53,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fallback to reference portfolio if empty
-    if (positions.length === 0) {
-      positions = REFERENCE_PORTFOLIO;
-    }
-
+    const isZeroPortfolio = positions.length === 0;
     const totalPortfolioCents = positions.reduce((acc, p) => acc + p.currentGrossCents, 0);
 
     // Get active planned action amount
     const planEntries = await actionRepo.listPlanEntries(userId);
-    const currentActionCents = planEntries.length > 0 ? planEntries[0].baseAmountCents : 250000;
+    const currentActionCents = planEntries.length > 0 ? planEntries[0].baseAmountCents : 0;
 
     // Run all 4 historical stress tests
     const historicalResults = HISTORICAL_SCENARIOS.map((scen) =>
@@ -87,7 +83,8 @@ export async function GET(request: NextRequest) {
       currentActionCents,
       historicalScenarios: historicalResults,
       monteCarlo: monteCarloResult,
-      isReferencePortfolio: positions === REFERENCE_PORTFOLIO,
+      isZeroPortfolio,
+      isReferencePortfolio: false,
       disclaimer: 'Simulações probabilísticas baseadas em retornos históricos do mercado brasileiro B3. Rentabilidade passada não garante rentabilidade futura.',
     });
   } catch (error) {

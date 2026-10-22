@@ -20,6 +20,7 @@ import {
 import { MonteCarloChart } from '@/components/simulation/MonteCarloChart';
 import { HistoricalStressCard } from '@/components/simulation/HistoricalStressCard';
 import { CustomShockSimulator } from '@/components/simulation/CustomShockSimulator';
+import { useUI } from '@/lib/theme-context';
 
 interface SimulationApiResponse {
   positions: PortfolioAssetInput[];
@@ -32,6 +33,7 @@ interface SimulationApiResponse {
 }
 
 export default function SimularPage() {
+  const { userId } = useUI();
   const [data, setData] = useState<SimulationApiResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export default function SimularPage() {
     async function loadSimulation() {
       try {
         setLoading(true);
-        const res = await fetch('/api/simular');
+        const res = await fetch(`/api/simular?userId=${encodeURIComponent(userId)}`);
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || 'Falha ao carregar simulação.');
 
@@ -64,11 +66,12 @@ export default function SimularPage() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [userId]);
 
-  const worstHistoricalScenario = data?.historicalScenarios.reduce((min, s) =>
-    s.deltaPercent < min.deltaPercent ? s : min
-  );
+  const worstHistoricalScenario =
+    data?.historicalScenarios && data.historicalScenarios.length > 0
+      ? data.historicalScenarios.reduce((min, s) => (s.deltaPercent < min.deltaPercent ? s : min))
+      : null;
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">

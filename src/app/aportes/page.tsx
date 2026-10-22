@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatCurrency } from '@/lib/formatters';
+import { useUI } from '@/lib/theme-context';
 import { ActionPlanEntry, ActionMonthOverride } from '@/domain/models/action-plan';
 import { MonthlyActionCard } from '@/components/action/MonthlyActionCard';
 import { NewPlanEntryModal } from '@/components/action/NewPlanEntryModal';
@@ -53,6 +54,7 @@ interface ActionPlanApiResponse {
 }
 
 export default function AportesPage() {
+  const { userId } = useUI();
   const [data, setData] = useState<ActionPlanApiResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +70,7 @@ export default function AportesPage() {
     async function fetchPlan() {
       try {
         setLoading(true);
-        const res = await fetch('/api/action-plan');
+        const res = await fetch(`/api/action-plan?userId=${encodeURIComponent(userId)}`);
         const resJson = await res.json();
         if (!res.ok) throw new Error(resJson.error || 'Falha ao carregar dados do plano de ação');
 
@@ -90,7 +92,7 @@ export default function AportesPage() {
     return () => {
       isCancelled = true;
     };
-  }, [refreshTrigger]);
+  }, [refreshTrigger, userId]);
 
   const handleDeleteItem = async (id: string, type: 'entry' | 'override') => {
     if (!confirm(`Deseja realmente remover esta ${type === 'override' ? 'ação extraordinária' : 'vigência'}?`)) {

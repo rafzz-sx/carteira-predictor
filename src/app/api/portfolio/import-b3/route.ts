@@ -6,7 +6,6 @@ import { PortfolioMath } from '@/domain/finance/portfolio-math';
 import { Transaction } from '@/domain/models/transaction';
 import { PortfolioPosition } from '@/domain/models/portfolio';
 
-const DEFAULT_USER_ID = 'demo-user-1';
 const DEFAULT_PORTFOLIO_ID = 'demo-portfolio-1';
 
 export async function POST(request: Request) {
@@ -14,8 +13,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const csvContent = body.csvContent;
     const isDryRun = Boolean(body.dryRun);
-    const userId = body.userId || DEFAULT_USER_ID;
-    const portfolioId = body.portfolioId || DEFAULT_PORTFOLIO_ID;
+    const userId = body.userId || (body.portfolioId?.startsWith('port_') ? body.portfolioId.replace('port_', '') : 'user_default');
+    const portfolioId = body.portfolioId || (userId ? `port_${userId}` : DEFAULT_PORTFOLIO_ID);
 
     if (!csvContent || typeof csvContent !== 'string') {
       return NextResponse.json({ error: 'Conteúdo do extrato não fornecido.' }, { status: 400 });
@@ -47,9 +46,26 @@ export async function POST(request: Request) {
       });
     }
 
-    // 2. Commit transactions to persistence and recalculate positions
     const txRepo = RepositoryFactory.getTransactionRepository();
     const portfolioRepo = RepositoryFactory.getPortfolioRepository();
+
+    const existingPortfolio = await portfolioRepo.getPortfolio(userId, portfolioId);
+    if (!existingPortfolio) {
+      await portfolioRepo.savePortfolio({
+        id: portfolioId,
+        userId,
+        name: 'Carteira Principal',
+        isDefault: true,
+        targetAllocations: {
+          stocksPct: 4000,
+          fiisPct: 3500,
+          fixedIncomePct: 2000,
+          cashReservePct: 500,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
 
     // Group transactions by ticker
     const tradesByTicker: Record<string, typeof parseResult.transactions> = {};

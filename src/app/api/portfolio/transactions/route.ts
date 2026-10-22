@@ -6,12 +6,12 @@ import { PortfolioMath } from '@/domain/finance/portfolio-math';
 import { Transaction, TransactionType } from '@/domain/models/transaction';
 import { PortfolioPosition } from '@/domain/models/portfolio';
 
-const DEFAULT_USER_ID = 'demo-user-1';
 const DEFAULT_PORTFOLIO_ID = 'demo-portfolio-1';
 
 export async function GET(request: NextRequest) {
   try {
-    const portfolioId = request.nextUrl.searchParams.get('portfolioId') || DEFAULT_PORTFOLIO_ID;
+    const userId = request.nextUrl.searchParams.get('userId');
+    const portfolioId = request.nextUrl.searchParams.get('portfolioId') || (userId ? `port_${userId}` : DEFAULT_PORTFOLIO_ID);
     const ticker = request.nextUrl.searchParams.get('ticker') || undefined;
 
     const txRepo = RepositoryFactory.getTransactionRepository();
@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const userId = body.userId || DEFAULT_USER_ID;
-    const portfolioId = body.portfolioId || DEFAULT_PORTFOLIO_ID;
+    const userId = body.userId || (body.portfolioId?.startsWith('port_') ? body.portfolioId.replace('port_', '') : 'user_default');
+    const portfolioId = body.portfolioId || (userId ? `port_${userId}` : DEFAULT_PORTFOLIO_ID);
     const rawTicker = String(body.ticker || '').trim().toUpperCase();
 
     // 1. Strict validation via BrazilianAssetGuard
@@ -53,6 +53,24 @@ export async function POST(request: Request) {
 
     const txRepo = RepositoryFactory.getTransactionRepository();
     const portfolioRepo = RepositoryFactory.getPortfolioRepository();
+
+    const existingPortfolio = await portfolioRepo.getPortfolio(userId, portfolioId);
+    if (!existingPortfolio) {
+      await portfolioRepo.savePortfolio({
+        id: portfolioId,
+        userId,
+        name: 'Carteira Principal',
+        isDefault: true,
+        targetAllocations: {
+          stocksPct: 4000,
+          fiisPct: 3500,
+          fixedIncomePct: 2000,
+          cashReservePct: 500,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
 
     // 2. Save transaction
     const totalAmountCents =

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { parseB3Statement, B3ImportResult } from '@/domain/finance/b3-importer';
 import { formatCurrency } from '@/lib/formatters';
+import { useUI } from '@/lib/theme-context';
 
 interface B3ImportModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ const SAMPLE_B3_CSV = `Data do Negócio;Tipo de Movimentação;Mercado;Prazo/Ven
 25/08/2026;Compra;Mercado à Vista;;BOVA11;ISHARES IBOVESPA;40;124,50;4.980,00`;
 
 export function B3ImportModal({ isOpen, onClose, onSuccess }: B3ImportModalProps) {
+  const { userId } = useUI();
   const [csvText, setCsvText] = useState<string>('');
   const [previewResult, setPreviewResult] = useState<B3ImportResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -81,6 +83,8 @@ export function B3ImportModal({ isOpen, onClose, onSuccess }: B3ImportModalProps
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
+          portfolioId: `port_${userId}`,
           csvContent: csvText,
           dryRun: false,
         }),

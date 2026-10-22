@@ -28,9 +28,11 @@ import {
 } from '@/domain/finance/risk-questionnaire';
 import { InvestorRiskProfile } from '@/domain/models/user-profile';
 import { AnnualAdjustmentType } from '@/domain/models/action-plan';
+import { useUI } from '@/lib/theme-context';
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { userId } = useUI();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -120,7 +122,6 @@ export default function OnboardingPage() {
     setSubmitError(null);
 
     try {
-      const userId = 'demo-user-1';
       const initialCapitalCents = parseCurrencyToCents(initialCapitalStr);
       const monthlyIncomeCents = parseCurrencyToCents(monthlyIncomeStr);
       const monthlyExpensesCents = parseCurrencyToCents(monthlyExpensesStr);
