@@ -435,6 +435,33 @@ O **Carteira Predictor** está integralmente construído, testado, calibrado e a
 9. **Instalabilidade PWA & Atalhos de Teclado:** Service Worker offline, manifesto PWA e navegação instantânea via tecla `?` e combos `G + ...`.
 10. **Qualidade de Engenharia Inviolável:** 12 suítes de teste automatizadas (100% verde), 0 erros TypeScript, 0 erros/warnings ESLint e build de produção Turbopack 100% aprovado.
 
+---
+
+## 16. ATUALIZAÇÃO CRÍTICA: RESOLUÇÃO DE DADOS ZERADOS, ISOLAMENTO PRIVADO E SUPABASE
+
+- [x] **Eliminação Definitiva de Valores e Ativos Pré-preenchidos:**
+  - Removido `INITIAL_DEMO_POSITIONS` de `src/app/api/portfolio/route.ts`. Nenhuma carteira nova recebe ativos fictícios.
+  - Removido `INITIAL_PLAN_ENTRY` e `INITIAL_OVERRIDES` de `src/app/api/action-plan/route.ts`. Aportes planejados iniciam em R$ 0,00.
+  - Removida injeção de custódia simulada de Renda Fixa (`Banco Inter`, `Itaú`, `Tesouro Nacional`) em `src/app/api/fixed-income/route.ts`.
+  - Removida injeção de transações simuladas de IR (`SAMPLE_TAX_TRANSACTIONS`) em `src/app/api/tax/route.ts`.
+  - Removido fallback para `REFERENCE_PORTFOLIO` em `src/app/api/simular/route.ts`.
+  - O dashboard principal (`src/app/page.tsx`) agora inicia 100% ZERADO (R$ 0,00, 0 ativos), sem o selo "DADOS DE EXEMPLO", com banner informativo de onboarding e botões diretos para `[+ Adicionar Ativo]` e `[Importar Extrato B3]`.
+- [x] **Isolamento Estrito de Usuários & Carteiras Privadas:**
+  - `generateUniqueUserId()` gera IDs criptograficamente aleatórios únicos (`user_...`) no primeiro acesso de cada dispositivo.
+  - Ninguém vê a carteira de outro usuário por padrão.
+  - Sincronização entre Computador e Celular garantida pelo link com parâmetro `?user=SEU_ID`, com botão no Header para "Copiar link para enviar".
+- [x] **Migração de Banco Cloud: Supabase (PostgreSQL) Implementado:**
+  - Criado [supabase/schema.sql](file:///c:/Users/perei/OneDrive/Documentos/Carteira/supabase/schema.sql) com DDL PostgreSQL completo e Row Level Security (RLS) habilitado.
+  - Implementado [src/lib/repositories/supabase-repository.ts](file:///c:/Users/perei/OneDrive/Documentos/Carteira/src/lib/repositories/supabase-repository.ts) com suporte a todas as 7 entidades.
+  - [src/lib/repositories/repository-factory.ts](file:///c:/Users/perei/OneDrive/Documentos/Carteira/src/lib/repositories/repository-factory.ts) configurado para detectar Supabase via `NEXT_PUBLIC_SUPABASE_URL` ou `PERSISTENCE_PROVIDER=supabase`.
+- [x] **Build e Qualidade:**
+  - `npm test`: 12/12 suítes aprovadas (100%).
+  - `npm run typecheck`: 0 erros.
+  - `npm run lint`: 0 erros e 0 warnings.
+  - `npm run build`: 100% bem-sucedido.
+  - Código commitado e enviado para `main` no GitHub.
+
+
 
 
 
