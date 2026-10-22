@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E1017"/>
+      <stop offset="100%" stop-color="#07080C"/>
+    </linearGradient>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C5CFF"/>
+      <stop offset="100%" stop-color="#22D3EE"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="192" height="192" rx="40" fill="url(#bgGrad)"/>
+  <rect width="192" height="192" rx="40" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+
+  <!-- Glowing Accent -->
+  <circle cx="96" cy="96" r="48" fill="#7C5CFF" opacity="0.15" filter="url(#glow)"/>
+
+  <!-- B3 Cockpit Candlestick & Trajectory Graphic -->
+  <g transform="translate(36, 36)" stroke="url(#brandGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Trend Line -->
+    <path d="M 10 90 L 40 65 L 70 75 L 110 25" />
+    <!-- Candle 1 -->
+    <line x1="25" y1="45" x2="25" y2="85" stroke-width="2" stroke="#A3A9BC"/>
+    <rect x="20" y="55" width="10" height="20" fill="#19D98B" stroke="#19D98B" rx="2"/>
+    <!-- Candle 2 -->
+    <line x1="60" y1="40" x2="60" y2="95" stroke-width="2" stroke="#A3A9BC"/>
+    <rect x="55" y="50" width="10" height="25" fill="#7C5CFF" stroke="#7C5CFF" rx="2"/>
+    <!-- Target Point -->
+    <circle cx="110" cy="25" r="5" fill="#22D3EE" filter="url(#glow)"/>
+  </g>
+</svg>

@@ -1,0 +1,190 @@
+// src/app/api/action-plan/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { RepositoryFactory } from '@/lib/repositories/repository-factory';
+import {
+  ActionPlanEntry,
+  ActionMonthOverride,
+  AnnualAdjustmentType,
+  resolveMonthlyActionPlan,
+} from '@/domain/models/action-plan';
+
+const DEFAULT_USER_ID = 'demo-user-1';
+
+// Seed initial plan entry if repository has none
+const INITIAL_PLAN_ENTRY: ActionPlanEntry = {
+  id: 'plan_seed_demo_1',
+  userId: DEFAULT_USER_ID,
+  effectiveFrom: '2026-07',
+  baseAmountCents: 250000, // R$ 2.500,00
+  annualAdjustmentType: 'ipca',
+  notes: 'Plano de Ação regular inicial configurado para compras mensais na B3.',
+  createdAt: '2026-07-01T10:00:00.000Z',
+};
+
+const INITIAL_OVERRIDES: ActionMonthOverride[] = [
+  {
+    id: 'ov_seed_13th',
+    userId: DEFAULT_USER_ID,
+    yearMonth: '2026-12',
+    overrideAmountCents: 500000, // R$ 5.000,00
+    isOneOffDeposit: true,
+    description: '13º Salário (Ação Extraordinária)',
+  },
+];
+
+export async function GET(request: NextRequest) {
+  try {
+    const userId = request.nextUrl.searchParams.get('userId') || DEFAULT_USER_ID;
+    const actionRepo = RepositoryFactory.getActionPlanRepository();
+
+    let entries = await actionRepo.listPlanEntries(userId);
+    let overrides = await actionRepo.listOverrides(userId);
+
+    // Seed defaults if empty
+    if (entries.length === 0) {
+      await actionRepo.savePlanEntry(INITIAL_PLAN_ENTRY);
+      entries = [INITIAL_PLAN_ENTRY];
+
+      for (const ov of INITIAL_OVERRIDES) {
+        await actionRepo.saveOverride(ov);
+      }
+      overrides = INITIAL_OVERRIDES;
+    }
+
+    const currentYearMonth = '2026-10'; // October 2026 current anchor
+    const activePlan = resolveMonthlyActionPlan(currentYearMonth, entries, overrides);
+
+    // Build 12-month rolling timeline (6 months back, current, 5 months ahead)
+    // 2026-05 to 2027-04
+    const timeline = [];
+    const monthsNames = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+    ];
+
+    const [anchorYear, anchorMonth] = currentYearMonth.split('-').map(Number);
+
+    for (let offset = -5; offset <= 6; offset++) {
+      const d = new Date(anchorYear, anchorMonth - 1 + offset, 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const ym = `${y}-${m}`;
+      const monthLabel = `${monthsNames[d.getMonth()]}/${y}`;
+
+      const resolved = resolveMonthlyActionPlan(ym, entries, overrides);
+
+      // Check simulated actuals for past months
+      let actualCents = 0;
+      let status: 'pending' | 'partial' | 'completed' = 'pending';
+
+      if (ym < currentYearMonth) {
+        // Past months: simulated completed
+        actualCents = resolved.plannedAmountCents;
+        status = 'completed';
+      } else if (ym === currentYearMonth) {
+        // Current month: pending action
+        actualCents = 0;
+        status = 'pending';
+      } else {
+        // Future months: pending
+        actualCents = 0;
+        status = 'pending';
+      }
+
+      timeline.push({
+        yearMonth: ym,
+        monthLabel,
+        isCurrentMonth: ym === currentYearMonth,
+        isPast: ym < currentYearMonth,
+        isFuture: ym > currentYearMonth,
+        plannedAmountCents: resolved.plannedAmountCents,
+        actualAmountCents: actualCents,
+        status,
+        gapCents: actualCents - resolved.plannedAmountCents,
+        source: resolved.source,
+        description: resolved.description,
+      });
+    }
+
+    return NextResponse.json({
+      entries,
+      overrides,
+      activePlan,
+      currentYearMonth,
+      timeline,
+    });
+  } catch (error) {
+    console.error('Error fetching action plan:', error);
+    return NextResponse.json({ error: 'Falha ao buscar plano de ação' }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const userId = body.userId || DEFAULT_USER_ID;
+    const actionRepo = RepositoryFactory.getActionPlanRepository();
+
+    if (body.type === 'override') {
+      const override: ActionMonthOverride = {
+        id: body.id || `override_${userId}_${body.yearMonth}`,
+        userId,
+        yearMonth: body.yearMonth,
+        overrideAmountCents: Math.max(0, Number(body.overrideAmountCents) || 0),
+        isOneOffDeposit: Boolean(body.isOneOffDeposit),
+        description: body.description || 'Ajuste pontual',
+      };
+      await actionRepo.saveOverride(override);
+      return NextResponse.json({ success: true, override });
+    }
+
+    // Default: Save plan entry
+    const validAdjustments: AnnualAdjustmentType[] = ['none', 'fixed_pct', 'ipca'];
+    const adjustmentType: AnnualAdjustmentType = validAdjustments.includes(body.annualAdjustmentType)
+      ? body.annualAdjustmentType
+      : 'none';
+
+    const entry: ActionPlanEntry = {
+      id: body.id || `plan_${userId}_${Date.now()}`,
+      userId,
+      effectiveFrom: body.effectiveFrom || '2026-10',
+      baseAmountCents: Math.max(0, Number(body.baseAmountCents) || 0),
+      annualAdjustmentType: adjustmentType,
+      annualAdjustmentPct: body.annualAdjustmentPct ? Number(body.annualAdjustmentPct) : undefined,
+      endDate: body.endDate || undefined,
+      notes: body.notes || undefined,
+      createdAt: body.createdAt || new Date().toISOString(),
+    };
+
+    await actionRepo.savePlanEntry(entry);
+
+    return NextResponse.json({ success: true, entry });
+  } catch (error) {
+    console.error('Error saving action plan:', error);
+    return NextResponse.json({ error: 'Falha ao salvar plano de ação' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    const type = searchParams.get('type') || 'entry'; // 'entry' or 'override'
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID não fornecido' }, { status: 400 });
+    }
+
+    const actionRepo = RepositoryFactory.getActionPlanRepository();
+    if (type === 'override') {
+      await actionRepo.deleteOverride(id);
+    } else {
+      await actionRepo.deletePlanEntry(id);
+    }
+
+    return NextResponse.json({ success: true, id });
+  } catch (error) {
+    console.error('Error deleting action plan item:', error);
+    return NextResponse.json({ error: 'Falha ao remover item' }, { status: 500 });
+  }
+}

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direção A: Terminal Glass / Quant Cockpit - Carteira Predictor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            base: {
+              DEFAULT: '#07080C',
+              raised: '#0D0F16',
+              border: 'rgba(255, 255, 255, 0.08)',
+              borderStrong: 'rgba(255, 255, 255, 0.16)',
+            },
+            surface: {
+              glass: 'rgba(255, 255, 255, 0.035)',
+              glassHover: 'rgba(255, 255, 255, 0.065)',
+            },
+            brand: {
+              DEFAULT: '#7C5CFF',
+              accent: '#22D3EE',
+            },
+            gain: '#19D98B',
+            loss: '#FF4D6D',
+            warning: '#F5B83D',
+            info: '#4DA3FF',
+            text: {
+              primary: '#F3F5FA',
+              secondary: '#A3A9BC',
+              tertiary: '#70778C'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          boxShadow: {
+            'glow-brand': '0 0 0 1px rgba(124, 92, 255, 0.35), 0 0 24px rgba(124, 92, 255, 0.18)',
+            'glow-gain': '0 0 0 1px rgba(25, 217, 139, 0.35), 0 0 20px rgba(25, 217, 139, 0.15)',
+            'glow-loss': '0 0 0 1px rgba(255, 77, 109, 0.35), 0 0 20px rgba(255, 77, 109, 0.15)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #07080C;
+      color: #F3F5FA;
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .num {
+      font-feature-settings: "tnum" 1, "cv05" 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .glass-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .privacy-active .maskable {
+      filter: blur(7px);
+      user-select: none;
+    }
+    /* Subtle mesh background */
+    .bg-mesh {
+      background-image: 
+        radial-gradient(at 15% 15%, rgba(124, 92, 255, 0.05) 0px, transparent 50%),
+        radial-gradient(at 85% 85%, rgba(34, 211, 238, 0.03) 0px, transparent 50%);
+    }
+
+    /* Mobile Preview Simulation Mode */
+    body.preview-mobile aside {
+      display: none !important;
+    }
+    body.preview-mobile .grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    body.preview-mobile section {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+    body.preview-mobile .bottom-nav {
+      display: flex !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-mesh flex flex-col antialiased selection:bg-brand/30">
+
+  <!-- Top Global Prototype Bar -->
+  <header class="bg-base-raised/90 border-b border-base-border px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-3 sticky top-0 z-50 backdrop-blur-md">
+    <div class="flex items-center gap-2">
+      <span class="px-2 py-0.5 rounded font-mono font-semibold bg-brand/20 text-brand text-[11px] border border-brand/30">DIREÇÃO A</span>
+      <span class="text-text-secondary font-medium">Terminal Glass / Quant Cockpit (Densidade Analítica)</span>
+      <span class="px-2 py-0.5 rounded text-[11px] bg-warning/10 text-warning border border-warning/20 font-medium">DADOS DE EXEMPLO</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- Viewport Toggle -->
+      <div class="bg-base/80 p-0.5 rounded-lg border border-base-border flex items-center text-xs">
+        <button id="btn-desktop" onclick="setMode('desktop')" class="px-2.5 py-1 rounded-md bg-white/10 text-text-primary font-medium transition-all">Desktop (1440px)</button>
+        <button id="btn-mobile" onclick="setMode('mobile')" class="px-2.5 py-1 rounded-md text-text-secondary hover:text-text-primary transition-all">Mobile (375px)</button>
+      </div>
+      <!-- Privacy Toggle -->
+      <button onclick="togglePrivacy()" id="privacy-btn" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-base/80 border border-base-border text-text-secondary hover:text-text-primary transition-all text-xs" title="Ocultar valores monetários">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <span id="privacy-label">Ocultar valores</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Prototype Outer Frame -->
+  <div id="frame-container" class="flex-1 w-full mx-auto p-4 sm:p-6 transition-all duration-300 max-w-[1400px]">
+
+    <div class="flex flex-col lg:flex-row gap-6">
+
+      <!-- Collapsible Desktop Navigation Sidebar -->
+      <aside class="hidden lg:flex flex-col w-60 shrink-0 gap-6 border-r border-base-border pr-5">
+        <div class="flex items-center gap-2.5 px-2">
+          <div class="w-8 h-8 rounded-lg bg-brand/15 border border-brand/40 flex items-center justify-center font-bold text-brand font-mono text-sm shadow-glow-brand">
+            CP
+          </div>
+          <div>
+            <div class="text-sm font-semibold tracking-tight text-text-primary">Carteira Predictor</div>
+            <div class="text-[11px] text-text-secondary">Cockpit de Investimentos</div>
+          </div>
+        </div>
+
+        <nav class="flex flex-col gap-1 text-sm font-medium">
+          <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 text-text-primary border border-white/10">
+            <svg class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Início
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Carteira
+          </a>
+          <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Aportes
+            </div>
+            <span class="w-2 h-2 rounded-full bg-warning" title="Aporte de Outubro pendente"></span>
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Mercado
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            Simular
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            Screener
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Renda Fixa
+          </a>
+        </nav>
+
+        <div class="mt-auto p-3 rounded-xl bg-white/[0.02] border border-base-border text-xs text-text-secondary flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-text-primary">Status B3</span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] bg-gain/15 text-gain font-medium">
+              <span class="w-1.5 h-1.5 rounded-full bg-gain animate-pulse"></span> Aberto
+            </span>
+          </div>
+          <div class="text-[11px] text-text-tertiary">
+            Cotações com atraso de ~30 min<br>
+            Última sync: 17:05 (BRL)
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 flex flex-col gap-6 max-w-full">
+
+        <!-- Top Header & Hero Number (Section 8.7: Patrimônio Total, deltas, market status badge) -->
+        <section class="glass-card rounded-2xl p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs uppercase tracking-wider text-text-secondary font-semibold">Patrimônio Total</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-white/5 border border-base-border text-text-secondary font-mono">
+                12 ATIVOS
+              </span>
+            </div>
+            
+            <div class="flex items-baseline gap-4 flex-wrap">
+              <h1 class="text-3xl sm:text-5xl font-bold tracking-tight text-text-primary num maskable">
+                R$ 148.920,45
+              </h1>
+              
+              <div class="flex items-center gap-3 text-sm">
+                <!-- Day delta -->
+                <div class="flex items-center gap-1 font-semibold text-gain num" title="Variação no dia">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  <span>+R$ 1.420,10 (+0,96%)</span>
+                  <span class="text-[11px] text-text-secondary font-normal">hoje</span>
+                </div>
+                <!-- 12m delta -->
+                <div class="flex items-center gap-1 font-semibold text-gain num" title="Rentabilidade últimos 12 meses">
+                  <span class="text-text-secondary">|</span>
+                  <span>+18,42%</span>
+                  <span class="text-[11px] text-text-secondary font-normal">em 12m (vs CDI 10,75%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions & Profile Badge -->
+          <div class="flex items-center gap-3 self-start md:self-auto">
+            <div class="flex flex-col items-end text-right">
+              <span class="text-xs text-text-secondary">Perfil de Risco</span>
+              <span class="text-sm font-semibold text-brand font-mono">MODERADO ARROJADO</span>
+            </div>
+            <a href="#aportes" class="px-4 py-2.5 rounded-xl bg-brand hover:bg-brand/90 text-white font-medium text-xs sm:text-sm flex items-center gap-2 transition-all shadow-glow-brand">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              Novo Aporte
+            </a>
+          </div>
+        </section>
+
+        <!-- Grid Row 1: Priority Block 1 & 2 (Aporte do Mês + Próxima Ação de Compra) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <!-- Block 1: Aporte do Mês (First-class editable setting) -->
+          <div class="glass-card rounded-2xl p-5 flex flex-col justify-between gap-4 border-l-4 border-l-warning">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-warning animate-pulse"></span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Plano de Aportes</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] bg-warning/15 text-warning border border-warning/20 font-semibold">
+                OUT/2026: PENDENTE
+              </span>
+            </div>
+
+            <div class="flex items-baseline justify-between">
+              <div>
+                <div class="text-xs text-text-secondary">Meta planejada do mês:</div>
+                <div class="text-2xl font-bold text-text-primary num maskable">R$ 2.500,00</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-text-secondary">Realizado até agora:</div>
+                <div class="text-base font-semibold text-text-secondary num maskable">R$ 0,00 (0%)</div>
+              </div>
+            </div>
+
+            <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-warning h-full w-0 rounded-full"></div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 border-t border-base-border text-xs">
+              <span class="text-text-secondary">Aporte ativo desde Jul/2026</span>
+              <button class="text-brand hover:underline font-semibold flex items-center gap-1">
+                Ajustar plano mensal →
+              </button>
+            </div>
+          </div>
+
+          <!-- Block 2: Próxima Ação (Smart Monthly Buy recommendation) -->
+          <div class="glass-card rounded-2xl p-5 flex flex-col justify-between gap-4 border-l-4 border-l-brand">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Aporte Inteligente do Mês</span>
+              </div>
+              <span class="text-xs text-text-secondary font-mono">R$ 2.500 disponível</span>
+            </div>
+
+            <div>
+              <div class="text-sm font-semibold text-text-primary">
+                Comprar <span class="text-brand font-mono">HGLG11</span> e <span class="text-brand font-mono">ITUB4</span>
+              </div>
+              <p class="text-xs text-text-secondary mt-1">
+                Reequilibra FIIs de logística (subalocados em 3,2%) e reforça qualidade sem vendas de ativos.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2 text-xs font-mono">
+              <span class="px-2 py-1 rounded bg-white/5 border border-base-border">8 cotas HGLG11 (~R$ 1.340)</span>
+              <span class="px-2 py-1 rounded bg-white/5 border border-base-border">32 ações ITUB4 (~R$ 1.150)</span>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 border-t border-base-border text-xs">
+              <span class="text-text-secondary">Respeita lotes e isenção tributária</span>
+              <button class="text-brand hover:underline font-semibold">Ver cálculo detalhado →</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Grid Row 2: Mini Projection Teaser + Asset Allocation Donut -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+          <!-- Mini Projection Teaser (Fan Chart Sparkline) -->
+          <div class="glass-card rounded-2xl p-5 lg:col-span-2 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Projeção Probabilística da Carteira</span>
+                <div class="text-sm font-medium text-text-primary mt-0.5">Simulação Monte Carlo (5.000 caminhos, horizonte 36 meses)</div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] bg-brand/10 text-brand border border-brand/20 font-mono">
+                P50 Cenário Central
+              </span>
+            </div>
+
+            <!-- Mini Fan Chart Mockup with SVG -->
+            <div class="h-44 w-full relative">
+              <svg class="w-full h-full overflow-visible" viewBox="0 0 600 160" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="p5p95Grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#7C5CFF" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#7C5CFF" stop-opacity="0.03"/>
+                  </linearGradient>
+                  <linearGradient id="p25p75Grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#7C5CFF" stop-opacity="0.45"/>
+                    <stop offset="100%" stop-color="#7C5CFF" stop-opacity="0.10"/>
+                  </linearGradient>
+                </defs>
+                <!-- Grid Lines -->
+                <line x1="0" y1="30" x2="600" y2="30" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4"/>
+                <line x1="0" y1="80" x2="600" y2="80" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4"/>
+                <line x1="0" y1="130" x2="600" y2="130" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4"/>
+
+                <!-- P5 - P95 Fan Area -->
+                <path d="M 0 110 Q 300 70 600 20 L 600 150 Q 300 135 0 110 Z" fill="url(#p5p95Grad)"/>
+                <!-- P25 - P75 Fan Area -->
+                <path d="M 0 110 Q 300 85 600 45 L 600 130 Q 300 125 0 110 Z" fill="url(#p25p75Grad)"/>
+                <!-- P50 Central Scenario Line -->
+                <path d="M 0 110 Q 300 95 600 75" fill="none" stroke="#7C5CFF" stroke-width="2.5"/>
+                <!-- Benchmark CDI Line -->
+                <path d="M 0 110 Q 300 102 600 92" fill="none" stroke="#A3A9BC" stroke-width="1.5" stroke-dasharray="4"/>
+
+                <!-- Marker "Hoje" -->
+                <circle cx="0" cy="110" r="4" fill="#7C5CFF"/>
+              </svg>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-base-border text-center">
+              <div>
+                <span class="text-[11px] text-text-secondary block">Cenário P10 (Estresse)</span>
+                <span class="text-xs font-semibold text-loss num maskable">R$ 215.400</span>
+              </div>
+              <div>
+                <span class="text-[11px] text-text-secondary block">Cenário Central (P50)</span>
+                <span class="text-xs font-semibold text-brand num maskable">R$ 274.800</span>
+              </div>
+              <div>
+                <span class="text-[11px] text-text-secondary block">Cenário P90 (Otimista)</span>
+                <span class="text-xs font-semibold text-gain num maskable">R$ 348.100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Allocation Donut / Summary -->
+          <div class="glass-card rounded-2xl p-5 flex flex-col justify-between gap-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Alocação Atual</span>
+              <span class="text-xs text-brand font-medium">Meta definida</span>
+            </div>
+
+            <!-- Mini Allocation Bars -->
+            <div class="flex flex-col gap-3 my-auto">
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-text-primary font-medium">Ações Brasil</span>
+                  <span class="text-text-secondary font-mono num">38,5% / 40%</span>
+                </div>
+                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                  <div class="bg-brand h-full rounded-full" style="width: 38.5%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-text-primary font-medium">Fundos Imobiliários (FIIs)</span>
+                  <span class="text-text-secondary font-mono num">31,8% / 35%</span>
+                </div>
+                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                  <div class="bg-brand-accent h-full rounded-full" style="width: 31.8%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-text-primary font-medium">Renda Fixa / Tesouro</span>
+                  <span class="text-text-secondary font-mono num">24,2% / 20%</span>
+                </div>
+                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                  <div class="bg-gain h-full rounded-full" style="width: 24.2%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-text-primary font-medium">Reserva de Emergência (Caixa)</span>
+                  <span class="text-text-secondary font-mono num">5,5% / 5%</span>
+                </div>
+                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                  <div class="bg-warning h-full rounded-full" style="width: 5.5%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-text-secondary pt-2 border-t border-base-border text-center">
+              Desvio máximo da meta: <span class="text-text-primary font-semibold">3,2% em FIIs</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Grid Row 3: Movers Today & Upcoming Dividends -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <!-- Movers Today Table -->
+          <div class="glass-card rounded-2xl p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Destaques da Minha Carteira</span>
+              <span class="text-xs text-text-tertiary">Hoje na B3</span>
+            </div>
+
+            <div class="flex flex-col divide-y divide-base-border text-xs">
+              <div class="py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="font-mono font-bold text-text-primary">VALE3</span>
+                  <span class="text-text-secondary truncate max-w-[120px]">Vale S.A.</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-text-primary num maskable">R$ 58,40</span>
+                  <span class="font-mono font-semibold text-gain flex items-center num">
+                    +2,45% ↑
+                  </span>
+                </div>
+              </div>
+
+              <div class="py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="font-mono font-bold text-text-primary">HGLG11</span>
+                  <span class="text-text-secondary truncate max-w-[120px]">CSHG Logística</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-text-primary num maskable">R$ 167,80</span>
+                  <span class="font-mono font-semibold text-gain flex items-center num">
+                    +0,82% ↑
+                  </span>
+                </div>
+              </div>
+
+              <div class="py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="font-mono font-bold text-text-primary">WEGE3</span>
+                  <span class="text-text-secondary truncate max-w-[120px]">WEG S.A.</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-text-primary num maskable">R$ 52,10</span>
+                  <span class="font-mono font-semibold text-loss flex items-center num">
+                    −0,65% ↓
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming Dividends -->
+          <div class="glass-card rounded-2xl p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Proventos Previstos</span>
+              <span class="text-xs text-brand font-medium">Outubro/2026</span>
+            </div>
+
+            <div class="flex flex-col divide-y divide-base-border text-xs">
+              <div class="py-2.5 flex items-center justify-between">
+                <div>
+                  <div class="font-mono font-semibold text-text-primary">HGLG11 • Rendimento</div>
+                  <div class="text-[11px] text-text-secondary">Pago em 14/10 • R$ 1,10 / cota</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-mono font-semibold text-gain num maskable">+R$ 220,00</div>
+                  <div class="text-[11px] text-gain">Recebido</div>
+                </div>
+              </div>
+
+              <div class="py-2.5 flex items-center justify-between">
+                <div>
+                  <div class="font-mono font-semibold text-text-primary">ITUB4 • JCP</div>
+                  <div class="text-[11px] text-text-secondary">Previsão 31/10 • R$ 0,28 / ação</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-mono font-semibold text-text-primary num maskable">+R$ 145,60</div>
+                  <div class="text-[11px] text-text-secondary">A receber (líq.)</div>
+                </div>
+              </div>
+
+              <div class="py-2.5 flex items-center justify-between">
+                <div>
+                  <div class="font-mono font-semibold text-text-primary">KNCR11 • Rendimento</div>
+                  <div class="text-[11px] text-text-secondary">Previsão 12/11 • R$ 1,02 / cota</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-mono font-semibold text-text-primary num maskable">+R$ 183,60</div>
+                  <div class="text-[11px] text-text-secondary">A receber</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Mandatory Disclaimer Footer (Section 0 Rule 4 & Section 7) -->
+        <footer class="mt-4 p-4 rounded-xl bg-white/[0.02] border border-base-border text-xs text-text-secondary flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p class="text-[11px] leading-relaxed text-text-tertiary">
+            <strong>Aviso Legal:</strong> Simulação baseada em dados históricos e premissas matemáticas. O Carteira Predictor é uma ferramenta pessoal analítica e educativa. Não constitui previsão de mercado, garantia de rentabilidade nem recomendação de investimento.
+          </p>
+          <a href="#como-calculamos" class="text-brand hover:underline text-[11px] shrink-0 font-medium">
+            Como calculamos →
+          </a>
+        </footer>
+
+        <!-- Mobile Bottom Tab Bar (Section 8.6: Início, Mercado, Carteira, Simular, Mais) -->
+        <nav class="bottom-nav hidden fixed bottom-0 left-0 right-0 z-40 bg-base-raised/95 border-t border-base-border backdrop-blur-lg px-2 py-2 items-center justify-around text-[10px] font-medium text-text-secondary">
+          <a href="#" class="flex flex-col items-center gap-1 text-brand">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Início
+          </a>
+          <a href="#" class="flex flex-col items-center gap-1 hover:text-text-primary">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Mercado
+          </a>
+          <a href="#" class="flex flex-col items-center gap-1 hover:text-text-primary relative">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Carteira
+            <span class="absolute top-0 right-1 w-2 h-2 rounded-full bg-warning"></span>
+          </a>
+          <a href="#" class="flex flex-col items-center gap-1 hover:text-text-primary">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            Simular
+          </a>
+          <a href="#" class="flex flex-col items-center gap-1 hover:text-text-primary">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            Mais
+          </a>
+        </nav>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    let isPrivacy = false;
+    function togglePrivacy() {
+      isPrivacy = !isPrivacy;
+      document.body.classList.toggle('privacy-active', isPrivacy);
+      document.getElementById('privacy-label').innerText = isPrivacy ? 'Mostrar valores' : 'Ocultar valores';
+    }
+
+    function setMode(mode) {
+      const container = document.getElementById('frame-container');
+      const btnDesktop = document.getElementById('btn-desktop');
+      const btnMobile = document.getElementById('btn-mobile');
+
+      if (mode === 'mobile') {
+        document.body.classList.add('preview-mobile');
+        container.style.maxWidth = '400px';
+        container.style.paddingLeft = '12px';
+        container.style.paddingRight = '12px';
+        container.style.paddingBottom = '70px';
+        btnMobile.classList.add('bg-white/10', 'text-text-primary');
+        btnMobile.classList.remove('text-text-secondary');
+        btnDesktop.classList.remove('bg-white/10', 'text-text-primary');
+        btnDesktop.classList.add('text-text-secondary');
+      } else {
+        document.body.classList.remove('preview-mobile');
+        container.style.maxWidth = '1400px';
+        container.style.paddingLeft = '';
+        container.style.paddingRight = '';
+        container.style.paddingBottom = '';
+        btnDesktop.classList.add('bg-white/10', 'text-text-primary');
+        btnDesktop.classList.remove('text-text-secondary');
+        btnMobile.classList.remove('bg-white/10', 'text-text-primary');
+        btnMobile.classList.add('text-text-secondary');
+      }
+    }
+  </script>
+</body>
+</html>

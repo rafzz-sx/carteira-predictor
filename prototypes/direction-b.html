@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direção B: Nordic Minimalist / Institutional FinTech - Carteira Predictor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            base: {
+              DEFAULT: '#0B0D14',
+              raised: '#111420',
+              border: 'rgba(255, 255, 255, 0.07)',
+              borderStrong: 'rgba(255, 255, 255, 0.14)',
+            },
+            surface: {
+              card: '#131724',
+              cardHover: '#181D2E',
+            },
+            brand: {
+              DEFAULT: '#6366F1', // Indigo / Iris
+              accent: '#06B6D4',  // Cyan
+            },
+            gain: '#10B981',
+            loss: '#F43F5E',
+            warning: '#F59E0B',
+            info: '#3B82F6',
+            text: {
+              primary: '#F8FAFC',
+              secondary: '#94A3B8',
+              tertiary: '#64748B'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          boxShadow: {
+            'card-subtle': '0 4px 20px -2px rgba(0, 0, 0, 0.4)',
+            'glow-focus': '0 0 0 2px rgba(99, 102, 241, 0.4)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0B0D14;
+      color: #F8FAFC;
+      font-family: '"Plus Jakarta Sans"', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .num {
+      font-feature-settings: "tnum" 1, "cv05" 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .fintech-card {
+      background-color: #121624;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+      transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .fintech-card:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateY(-1px);
+    }
+    .privacy-active .maskable {
+      filter: blur(7px);
+      user-select: none;
+    }
+    .radial-header-glow {
+      background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+    }
+
+    /* Mobile Preview Simulation Mode */
+    body.preview-mobile aside {
+      display: none !important;
+    }
+    body.preview-mobile .grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    body.preview-mobile section {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+    body.preview-mobile .bottom-nav {
+      display: flex !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen radial-header-glow flex flex-col antialiased selection:bg-brand/30">
+
+  <!-- Top Global Prototype Bar -->
+  <header class="bg-base-raised/90 border-b border-base-border px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-3 sticky top-0 z-50 backdrop-blur-md">
+    <div class="flex items-center gap-2">
+      <span class="px-2 py-0.5 rounded font-mono font-semibold bg-brand/20 text-brand text-[11px] border border-brand/30">DIREÇÃO B</span>
+      <span class="text-text-secondary font-medium">Nordic Minimalist / Institutional FinTech (Clareza Estruturada)</span>
+      <span class="px-2 py-0.5 rounded text-[11px] bg-warning/10 text-warning border border-warning/20 font-medium">DADOS DE EXEMPLO</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- Viewport Toggle -->
+      <div class="bg-base/80 p-0.5 rounded-lg border border-base-border flex items-center text-xs">
+        <button id="btn-desktop" onclick="setMode('desktop')" class="px-2.5 py-1 rounded-md bg-white/10 text-text-primary font-medium transition-all">Desktop (1440px)</button>
+        <button id="btn-mobile" onclick="setMode('mobile')" class="px-2.5 py-1 rounded-md text-text-secondary hover:text-text-primary transition-all">Mobile (375px)</button>
+      </div>
+      <!-- Privacy Toggle -->
+      <button onclick="togglePrivacy()" id="privacy-btn" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-base/80 border border-base-border text-text-secondary hover:text-text-primary transition-all text-xs" title="Ocultar valores monetários">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <span id="privacy-label">Ocultar valores</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Prototype Outer Frame -->
+  <div id="frame-container" class="flex-1 w-full mx-auto p-4 sm:p-6 transition-all duration-300 max-w-[1400px]">
+
+    <div class="flex flex-col lg:flex-row gap-8">
+
+      <!-- Navigation Sidebar -->
+      <aside class="hidden lg:flex flex-col w-64 shrink-0 gap-6 border-r border-base-border pr-6">
+        <div class="flex items-center gap-3 px-2">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand to-brand-accent flex items-center justify-center font-bold text-white text-sm shadow-sm">
+            CP
+          </div>
+          <div>
+            <div class="text-sm font-bold tracking-tight text-text-primary">Carteira Predictor</div>
+            <div class="text-[11px] text-text-secondary">Gestão Patrimonial B3</div>
+          </div>
+        </div>
+
+        <nav class="flex flex-col gap-1 text-sm font-medium">
+          <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-brand/10 text-brand font-semibold">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Início
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-white/[0.04] transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Carteira
+          </a>
+          <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-white/[0.04] transition-colors">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Aportes
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] bg-warning/20 text-warning font-semibold">Pendente</span>
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-white/[0.04] transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Mercado
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-white/[0.04] transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            Simular
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-white/[0.04] transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            Screener
+          </a>
+        </nav>
+
+        <div class="mt-auto p-4 rounded-2xl bg-base-raised border border-base-border text-xs text-text-secondary flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-text-primary">Mercado B3</span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] bg-gain/15 text-gain font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-gain"></span> Aberto
+            </span>
+          </div>
+          <div class="text-[11px] text-text-tertiary">
+            Atraso oficial ~30 min • 17:05
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 flex flex-col gap-6 max-w-full">
+
+        <!-- Top Header & Hero Number -->
+        <section class="fintech-card rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs uppercase tracking-wider text-text-secondary font-semibold">Patrimônio Consolidado</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] bg-base-raised text-text-secondary font-mono border border-base-border">
+                12 Ativos em Carteira
+              </span>
+            </div>
+            
+            <div class="flex items-baseline gap-4 flex-wrap">
+              <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-text-primary num maskable">
+                R$ 148.920,45
+              </h1>
+              
+              <div class="flex items-center gap-3 text-sm">
+                <!-- Day delta -->
+                <div class="flex items-center gap-1 font-semibold text-gain num">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  <span>+R$ 1.420,10 (+0,96%)</span>
+                  <span class="text-[11px] text-text-secondary font-normal">hoje</span>
+                </div>
+                <!-- 12m delta -->
+                <div class="flex items-center gap-1 font-semibold text-gain num">
+                  <span class="text-text-secondary">|</span>
+                  <span>+18,42%</span>
+                  <span class="text-[11px] text-text-secondary font-normal">em 12m (vs CDI 10,75%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-3 self-start md:self-auto">
+            <div class="flex flex-col items-end text-right">
+              <span class="text-xs text-text-secondary">Perfil</span>
+              <span class="text-sm font-semibold text-brand">Moderado Arrojado</span>
+            </div>
+            <button class="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand/90 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              Registrar Aporte
+            </button>
+          </div>
+        </section>
+
+        <!-- Grid Row 1: Priority Block 1 & 2 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <!-- Block 1: Aporte do Mês -->
+          <div class="fintech-card rounded-2xl p-6 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-warning"></span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Aporte Programado</span>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] bg-warning/15 text-warning font-semibold">
+                Outubro/2026: Pendente
+              </span>
+            </div>
+
+            <div class="flex items-baseline justify-between">
+              <div>
+                <div class="text-xs text-text-secondary">Meta mensal ativa:</div>
+                <div class="text-2xl font-bold text-text-primary num maskable">R$ 2.500,00</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-text-secondary">Aportado até o momento:</div>
+                <div class="text-sm font-semibold text-text-secondary num maskable">R$ 0,00 (0%)</div>
+              </div>
+            </div>
+
+            <div class="w-full bg-base-raised h-2 rounded-full overflow-hidden">
+              <div class="bg-warning h-full w-0 rounded-full"></div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-base-border text-xs">
+              <span class="text-text-secondary">Plano vigente desde Julho/2026</span>
+              <button class="text-brand hover:underline font-semibold">Editar plano de aportes →</button>
+            </div>
+          </div>
+
+          <!-- Block 2: Próxima Ação -->
+          <div class="fintech-card rounded-2xl p-6 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-5 h-5 rounded-md bg-brand/20 text-brand flex items-center justify-center">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Sugestão de Alocação do Mês</span>
+              </div>
+              <span class="text-xs text-text-secondary font-mono">Disponível: R$ 2.500</span>
+            </div>
+
+            <div>
+              <div class="text-sm font-semibold text-text-primary">
+                Aporte sugerido: <span class="text-brand font-mono font-bold">HGLG11</span> + <span class="text-brand font-mono font-bold">ITUB4</span>
+              </div>
+              <p class="text-xs text-text-secondary mt-1">
+                Aproxima sua carteira das metas patrimoniais sem gerar vendas tributáveis.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2 text-xs font-mono">
+              <span class="px-2.5 py-1 rounded-lg bg-base-raised border border-base-border">8 cotas HGLG11 (~R$ 1.340)</span>
+              <span class="px-2.5 py-1 rounded-lg bg-base-raised border border-base-border">32 ações ITUB4 (~R$ 1.150)</span>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-base-border text-xs">
+              <span class="text-text-secondary">Regras fiscais respeitadas</span>
+              <button class="text-brand hover:underline font-semibold">Visualizar detalhes →</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Grid Row 2: Mini Projection + Allocation -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+          <!-- Mini Projection Teaser -->
+          <div class="fintech-card rounded-2xl p-6 lg:col-span-2 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Simulação de Cenários Futuros</span>
+                <div class="text-sm font-semibold text-text-primary mt-0.5">Monte Carlo Correlacionado (36 meses)</div>
+              </div>
+              <span class="px-2.5 py-1 rounded-lg bg-base-raised text-text-secondary border border-base-border text-xs font-mono">
+                5.000 caminhos
+              </span>
+            </div>
+
+            <!-- Mini Fan Chart Mockup with SVG -->
+            <div class="h-44 w-full relative">
+              <svg class="w-full h-full overflow-visible" viewBox="0 0 600 160" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="b_p5p95Grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#6366F1" stop-opacity="0.20"/>
+                    <stop offset="100%" stop-color="#6366F1" stop-opacity="0.02"/>
+                  </linearGradient>
+                  <linearGradient id="b_p25p75Grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#6366F1" stop-opacity="0.40"/>
+                    <stop offset="100%" stop-color="#6366F1" stop-opacity="0.08"/>
+                  </linearGradient>
+                </defs>
+                <line x1="0" y1="30" x2="600" y2="30" stroke="rgba(255,255,255,0.05)"/>
+                <line x1="0" y1="80" x2="600" y2="80" stroke="rgba(255,255,255,0.05)"/>
+                <line x1="0" y1="130" x2="600" y2="130" stroke="rgba(255,255,255,0.05)"/>
+
+                <path d="M 0 110 Q 300 70 600 20 L 600 150 Q 300 135 0 110 Z" fill="url(#b_p5p95Grad)"/>
+                <path d="M 0 110 Q 300 85 600 45 L 600 130 Q 300 125 0 110 Z" fill="url(#b_p25p75Grad)"/>
+                <path d="M 0 110 Q 300 95 600 75" fill="none" stroke="#6366F1" stroke-width="2.5"/>
+                <path d="M 0 110 Q 300 102 600 92" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3"/>
+                <circle cx="0" cy="110" r="4" fill="#6366F1"/>
+              </svg>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-base-border text-center">
+              <div>
+                <span class="text-[11px] text-text-secondary block">Cenário Conservador (P10)</span>
+                <span class="text-xs font-semibold text-loss num maskable">R$ 215.400</span>
+              </div>
+              <div>
+                <span class="text-[11px] text-text-secondary block">Cenário Central (P50)</span>
+                <span class="text-xs font-bold text-brand num maskable">R$ 274.800</span>
+              </div>
+              <div>
+                <span class="text-[11px] text-text-secondary block">Cenário Otimista (P90)</span>
+                <span class="text-xs font-semibold text-gain num maskable">R$ 348.100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Allocation Overview -->
+          <div class="fintech-card rounded-2xl p-6 flex flex-col justify-between gap-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Classes de Ativos</span>
+              <span class="text-xs text-brand font-medium">Meta Estratégica</span>
+            </div>
+
+            <div class="flex flex-col gap-3.5 my-auto">
+              <div>
+                <div class="flex justify-between text-xs mb-1.5 font-medium">
+                  <span class="text-text-primary">Ações Brasil</span>
+                  <span class="text-text-secondary font-mono num">38,5% / 40%</span>
+                </div>
+                <div class="w-full bg-base-raised h-2 rounded-full overflow-hidden">
+                  <div class="bg-brand h-full rounded-full" style="width: 38.5%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1.5 font-medium">
+                  <span class="text-text-primary">Fundos Imobiliários</span>
+                  <span class="text-text-secondary font-mono num">31,8% / 35%</span>
+                </div>
+                <div class="w-full bg-base-raised h-2 rounded-full overflow-hidden">
+                  <div class="bg-brand-accent h-full rounded-full" style="width: 31.8%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1.5 font-medium">
+                  <span class="text-text-primary">Renda Fixa</span>
+                  <span class="text-text-secondary font-mono num">24,2% / 20%</span>
+                </div>
+                <div class="w-full bg-base-raised h-2 rounded-full overflow-hidden">
+                  <div class="bg-gain h-full rounded-full" style="width: 24.2%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1.5 font-medium">
+                  <span class="text-text-primary">Caixa / Reserva</span>
+                  <span class="text-text-secondary font-mono num">5,5% / 5%</span>
+                </div>
+                <div class="w-full bg-base-raised h-2 rounded-full overflow-hidden">
+                  <div class="bg-warning h-full rounded-full" style="width: 5.5%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-text-secondary pt-2 border-t border-base-border text-center">
+              Rebalanceamento sugerido via novos aportes
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Grid Row 3: Movers & Proventos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <!-- Movers Today Table -->
+          <div class="fintech-card rounded-2xl p-6 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Movimentações do Dia</span>
+              <span class="text-xs text-text-tertiary">Preços B3</span>
+            </div>
+
+            <div class="flex flex-col divide-y divide-base-border text-xs">
+              <div class="py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="font-mono font-bold text-text-primary">VALE3</span>
+                  <span class="text-text-secondary truncate max-w-[120px]">Vale S.A.</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-text-primary num maskable">R$ 58,40</span>
+                  <span class="font-mono font-semibold text-gain flex items-center num">
+                    +2,45% ↑
+                  </span>
+                </div>
+              </div>
+
+              <div class="py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="font-mono font-bold text-text-primary">HGLG11</span>
+                  <span class="text-text-secondary truncate max-w-[120px]">CSHG Logística</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-text-primary num maskable">R$ 167,80</span>
+                  <span class="font-mono font-semibold text-gain flex items-center num">
+                    +0,82% ↑
+                  </span>
+                </div>
+              </div>
+
+              <div class="py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="font-mono font-bold text-text-primary">WEGE3</span>
+                  <span class="text-text-secondary truncate max-w-[120px]">WEG S.A.</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-text-primary num maskable">R$ 52,10</span>
+                  <span class="font-mono font-semibold text-loss flex items-center num">
+                    −0,65% ↓
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming Dividends -->
+          <div class="fintech-card rounded-2xl p-6 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-text-secondary">Calendário de Proventos</span>
+              <span class="text-xs text-brand font-medium">Outubro/2026</span>
+            </div>
+
+            <div class="flex flex-col divide-y divide-base-border text-xs">
+              <div class="py-2.5 flex items-center justify-between">
+                <div>
+                  <div class="font-mono font-semibold text-text-primary">HGLG11 • Rendimento</div>
+                  <div class="text-[11px] text-text-secondary">Pago em 14/10 • R$ 1,10 / cota</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-mono font-semibold text-gain num maskable">+R$ 220,00</div>
+                  <div class="text-[11px] text-gain">Recebido</div>
+                </div>
+              </div>
+
+              <div class="py-2.5 flex items-center justify-between">
+                <div>
+                  <div class="font-mono font-semibold text-text-primary">ITUB4 • JCP</div>
+                  <div class="text-[11px] text-text-secondary">Previsão 31/10 • R$ 0,28 / ação</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-mono font-semibold text-text-primary num maskable">+R$ 145,60</div>
+                  <div class="text-[11px] text-text-secondary">A receber (líq.)</div>
+                </div>
+              </div>
+
+              <div class="py-2.5 flex items-center justify-between">
+                <div>
+                  <div class="font-mono font-semibold text-text-primary">KNCR11 • Rendimento</div>
+                  <div class="text-[11px] text-text-secondary">Previsão 12/11 • R$ 1,02 / cota</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-mono font-semibold text-text-primary num maskable">+R$ 183,60</div>
+                  <div class="text-[11px] text-text-secondary">A receber</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Mandatory Disclaimer Footer -->
+        <footer class="mt-4 p-4 rounded-2xl bg-base-raised border border-base-border text-xs text-text-secondary flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p class="text-[11px] leading-relaxed text-text-tertiary">
+            <strong>Aviso Legal:</strong> Simulação baseada em dados históricos e premissas matemáticas. O Carteira Predictor é uma ferramenta pessoal analítica e educativa. Não constitui previsão de mercado, garantia de rentabilidade nem recomendação de investimento.
+          </p>
+          <a href="#como-calculamos" class="text-brand hover:underline text-[11px] shrink-0 font-medium">
+            Como calculamos →
+          </a>
+        </footer>
+
+        <!-- Mobile Bottom Tab Bar (Section 8.6: Início, Mercado, Carteira, Simular, Mais) -->
+        <nav class="bottom-nav hidden fixed bottom-0 left-0 right-0 z-40 bg-base-raised/95 border-t border-base-border backdrop-blur-lg px-2 py-2 items-center justify-around text-[10px] font-medium text-text-secondary">
+          <a href="#" class="flex flex-col items-center gap-1 text-brand">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Início
+          </a>
+          <a href="#" class="flex flex-col items-center gap-1 hover:text-text-primary">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Mercado
+          </a>
+          <a href="#" class="flex flex-col items-center gap-1 hover:text-text-primary relative">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Carteira
+            <span class="absolute top-0 right-1 w-2 h-2 rounded-full bg-warning"></span>
+          </a>
+          <a href="#" class="flex flex-col items-center gap-1 hover:text-text-primary">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            Simular
+          </a>
+          <a href="#" class="flex flex-col items-center gap-1 hover:text-text-primary">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            Mais
+          </a>
+        </nav>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    let isPrivacy = false;
+    function togglePrivacy() {
+      isPrivacy = !isPrivacy;
+      document.body.classList.toggle('privacy-active', isPrivacy);
+      document.getElementById('privacy-label').innerText = isPrivacy ? 'Mostrar valores' : 'Ocultar valores';
+    }
+
+    function setMode(mode) {
+      const container = document.getElementById('frame-container');
+      const btnDesktop = document.getElementById('btn-desktop');
+      const btnMobile = document.getElementById('btn-mobile');
+
+      if (mode === 'mobile') {
+        document.body.classList.add('preview-mobile');
+        container.style.maxWidth = '400px';
+        container.style.paddingLeft = '12px';
+        container.style.paddingRight = '12px';
+        container.style.paddingBottom = '70px';
+        btnMobile.classList.add('bg-white/10', 'text-text-primary');
+        btnMobile.classList.remove('text-text-secondary');
+        btnDesktop.classList.remove('bg-white/10', 'text-text-primary');
+        btnDesktop.classList.add('text-text-secondary');
+      } else {
+        document.body.classList.remove('preview-mobile');
+        container.style.maxWidth = '1400px';
+        container.style.paddingLeft = '';
+        container.style.paddingRight = '';
+        container.style.paddingBottom = '';
+        btnDesktop.classList.add('bg-white/10', 'text-text-primary');
+        btnDesktop.classList.remove('text-text-secondary');
+        btnMobile.classList.remove('bg-white/10', 'text-text-primary');
+        btnMobile.classList.add('text-text-secondary');
+      }
+    }
+  </script>
+</body>
+</html>

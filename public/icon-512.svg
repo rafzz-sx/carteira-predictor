@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E1017"/>
+      <stop offset="100%" stop-color="#07080C"/>
+    </linearGradient>
+    <linearGradient id="brandGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C5CFF"/>
+      <stop offset="100%" stop-color="#22D3EE"/>
+    </linearGradient>
+    <filter id="glow512" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bgGrad512)"/>
+  <rect width="512" height="512" rx="100" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
+
+  <!-- Glowing Accent -->
+  <circle cx="256" cy="256" r="130" fill="#7C5CFF" opacity="0.18" filter="url(#glow512)"/>
+
+  <!-- Graphic -->
+  <g transform="translate(96, 96)" stroke="url(#brandGrad512)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Trend Line -->
+    <path d="M 20 240 L 95 170 L 180 195 L 300 65" />
+    <!-- Candle 1 -->
+    <line x1="60" y1="120" x2="60" y2="230" stroke-width="4" stroke="#A3A9BC"/>
+    <rect x="45" y="145" width="30" height="55" fill="#19D98B" stroke="#19D98B" rx="6"/>
+    <!-- Candle 2 -->
+    <line x1="150" y1="100" x2="150" y2="260" stroke-width="4" stroke="#A3A9BC"/>
+    <rect x="135" y="130" width="30" height="70" fill="#7C5CFF" stroke="#7C5CFF" rx="6"/>
+    <!-- Target Point -->
+    <circle cx="300" cy="65" r="14" fill="#22D3EE" filter="url(#glow512)"/>
+  </g>
+</svg>

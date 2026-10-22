@@ -1,0 +1,86 @@
+/* src/tokens/tokens.css - Carteira Predictor Design System Variables */
+
+:root,
+.theme-dark {
+  --color-bg-base: #07080C;
+  --color-bg-raised: #0D0F16;
+  --color-surface: rgba(255, 255, 255, 0.04);
+  --color-surface-hover: rgba(255, 255, 255, 0.07);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  --color-text-primary: #F3F5FA;
+  --color-text-secondary: #A3A9BC;
+  --color-text-tertiary: #70778C;
+
+  --color-brand: #7C5CFF;
+  --color-brand-accent: #22D3EE;
+
+  --color-gain: #19D98B;
+  --color-loss: #FF4D6D;
+  --color-warning: #F5B83D;
+  --color-info: #4DA3FF;
+
+  --glow-brand: 0 0 0 1px rgba(124, 92, 255, 0.35), 0 0 24px rgba(124, 92, 255, 0.18);
+  --glow-gain: 0 0 0 1px rgba(25, 217, 139, 0.35), 0 0 20px rgba(25, 217, 139, 0.15);
+  --glow-loss: 0 0 0 1px rgba(255, 77, 109, 0.35), 0 0 20px rgba(255, 77, 109, 0.15);
+  --glow-focus: 0 0 0 2px rgba(124, 92, 255, 0.50), 0 0 16px rgba(124, 92, 255, 0.25);
+}
+
+.theme-oled {
+  --color-bg-base: #000000;
+  --color-bg-raised: #080808;
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-hover: rgba(255, 255, 255, 0.09);
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.22);
+
+  --color-text-primary: #F3F5FA;
+  --color-text-secondary: #A3A9BC;
+  --color-text-tertiary: #6B7280;
+
+  --color-brand: #8E72FF;
+  --color-brand-accent: #22D3EE;
+
+  --color-gain: #19D98B;
+  --color-loss: #FF4D6D;
+  --color-warning: #F5B83D;
+  --color-info: #4DA3FF;
+
+  --glow-brand: 0 0 0 1px rgba(142, 114, 255, 0.40), 0 0 24px rgba(142, 114, 255, 0.20);
+  --glow-gain: 0 0 0 1px rgba(25, 217, 139, 0.40), 0 0 20px rgba(25, 217, 139, 0.18);
+  --glow-loss: 0 0 0 1px rgba(255, 77, 109, 0.40), 0 0 20px rgba(255, 77, 109, 0.18);
+  --glow-focus: 0 0 0 2px rgba(142, 114, 255, 0.60), 0 0 16px rgba(142, 114, 255, 0.30);
+}
+
+.theme-light {
+  --color-bg-base: #F6F7FB;
+  --color-bg-raised: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F1F3F9;
+  --color-border: rgba(10, 15, 30, 0.10);
+  --color-border-strong: rgba(10, 15, 30, 0.20);
+
+  --color-text-primary: #0C101D;
+  --color-text-secondary: #525B75;
+  --color-text-tertiary: #7882A0;
+
+  --color-brand: #5B36E8;
+  --color-brand-accent: #0E7490;
+
+  --color-gain: #0A8F5B;
+  --color-loss: #D6264A;
+  --color-warning: #B45309;
+  --color-info: #1D4ED8;
+
+  --glow-brand: 0 0 0 1px rgba(91, 54, 232, 0.25), 0 0 16px rgba(91, 54, 232, 0.10);
+  --glow-gain: 0 0 0 1px rgba(10, 143, 91, 0.25), 0 0 16px rgba(10, 143, 91, 0.10);
+  --glow-loss: 0 0 0 1px rgba(214, 38, 74, 0.25), 0 0 16px rgba(214, 38, 74, 0.10);
+  --glow-focus: 0 0 0 2px rgba(91, 54, 232, 0.40), 0 0 12px rgba(91, 54, 232, 0.15);
+}
+
+/* Number formatting class for tabular figures */
+.font-tabular {
+  font-feature-settings: "tnum" 1, "cv05" 1;
+  font-variant-numeric: tabular-nums;
+}
