@@ -11,6 +11,8 @@ import {
 } from '@/domain/finance/scenario-simulator';
 import { MarketDataService } from '@/lib/market-data';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_USER_ID = 'demo-user-1';
 
 // Reference portfolio if user has no positions in custody yet
@@ -88,6 +90,9 @@ export async function GET(request: NextRequest) {
       disclaimer: 'Simulações probabilísticas baseadas em retornos históricos do mercado brasileiro B3. Rentabilidade passada não garante rentabilidade futura.',
     });
   } catch (error) {
+    if ((error as { digest?: string })?.digest?.startsWith('NEXT_')) {
+      throw error;
+    }
     console.error('Error running scenario simulation:', error);
     return NextResponse.json({ error: 'Falha ao executar simulação de cenários' }, { status: 500 });
   }

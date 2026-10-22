@@ -6,6 +6,8 @@ import { PortfolioMath } from '@/domain/finance/portfolio-math';
 import { Transaction, TransactionType } from '@/domain/models/transaction';
 import { PortfolioPosition } from '@/domain/models/portfolio';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_PORTFOLIO_ID = 'demo-portfolio-1';
 
 export async function GET(request: NextRequest) {
@@ -19,6 +21,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ transactions });
   } catch (error) {
+    if ((error as { digest?: string })?.digest?.startsWith('NEXT_')) {
+      throw error;
+    }
     console.error('Error fetching transactions:', error);
     return NextResponse.json({ error: 'Falha ao buscar transações' }, { status: 500 });
   }

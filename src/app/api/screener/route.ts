@@ -10,6 +10,8 @@ import {
 } from '@/domain/models/screener';
 import { BrazilianAssetType } from '@/domain/guards/brazilian-asset-guard';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -69,6 +71,9 @@ export async function GET(request: NextRequest) {
       isExample: true,
     });
   } catch (error) {
+    if ((error as { digest?: string })?.digest?.startsWith('NEXT_')) {
+      throw error;
+    }
     console.error('Error in screener API:', error);
     return NextResponse.json({ error: 'Falha ao executar screener de ativos' }, { status: 500 });
   }

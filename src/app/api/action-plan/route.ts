@@ -8,6 +8,8 @@ import {
   resolveMonthlyActionPlan,
 } from '@/domain/models/action-plan';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_USER_ID = 'demo-user-1';
 
 export async function GET(request: NextRequest) {
@@ -81,6 +83,9 @@ export async function GET(request: NextRequest) {
       timeline,
     });
   } catch (error) {
+    if ((error as { digest?: string })?.digest?.startsWith('NEXT_')) {
+      throw error;
+    }
     console.error('Error fetching action plan:', error);
     return NextResponse.json({ error: 'Falha ao buscar plano de ação' }, { status: 500 });
   }

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RepositoryFactory } from '@/lib/repositories/repository-factory';
 import { MarketDataService } from '@/lib/market-data';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_USER_ID = 'user_default';
 
 export async function GET(request: NextRequest) {
@@ -106,6 +108,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    if ((error as { digest?: string })?.digest?.startsWith('NEXT_')) {
+      throw error;
+    }
     console.error('Error fetching portfolio:', error);
     return NextResponse.json({ error: 'Failed to fetch portfolio' }, { status: 500 });
   }

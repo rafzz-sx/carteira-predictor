@@ -4,6 +4,8 @@ import { TaxCalculator } from '@/domain/finance/tax-calculator';
 import { RepositoryFactory } from '@/lib/repositories/repository-factory';
 import { Transaction } from '@/domain/models/transaction';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_USER_ID = 'demo-user-1';
 
 export async function GET(request: NextRequest) {
@@ -37,6 +39,9 @@ export async function GET(request: NextRequest) {
       auditResult,
     });
   } catch (error) {
+    if ((error as { digest?: string })?.digest?.startsWith('NEXT_')) {
+      throw error;
+    }
     console.error('Error calculating taxes:', error);
     return NextResponse.json({ success: false, error: 'Failed to audit taxes' }, { status: 500 });
   }

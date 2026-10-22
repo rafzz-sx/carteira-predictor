@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { FixedIncomeService } from '@/domain/finance/fixed-income';
 import { RepositoryFactory } from '@/lib/repositories/repository-factory';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_USER_ID = 'demo-user-1';
 
 export async function GET(request: NextRequest) {
@@ -92,6 +94,9 @@ export async function GET(request: NextRequest) {
       fgcAnalysis,
     });
   } catch (error) {
+    if ((error as { digest?: string })?.digest?.startsWith('NEXT_')) {
+      throw error;
+    }
     console.error('Error fetching fixed income data:', error);
     return NextResponse.json({ success: false, error: 'Failed to load fixed income data' }, { status: 500 });
   }

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RepositoryFactory } from '@/lib/repositories/repository-factory';
 import { UserProfile, InvestorRiskProfile } from '@/domain/models/user-profile';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_USER_ID = 'demo-user-1';
 
 export async function GET(request: NextRequest) {
@@ -35,6 +37,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ exists: true, profile });
   } catch (error) {
+    if ((error as { digest?: string })?.digest?.startsWith('NEXT_')) {
+      throw error;
+    }
     console.error('Error fetching user profile:', error);
     return NextResponse.json(
       { error: 'Falha ao buscar perfil do investidor' },
